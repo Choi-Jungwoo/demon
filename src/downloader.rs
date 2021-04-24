@@ -20,7 +20,7 @@ impl<S> Downloader<S>
 where
     S: Scheme + 'static,
 {
-    pub fn read(&self, url: String, num_threads: usize) -> Result<BytesMut, DownloadError> {
+    pub fn read(&self, num_threads: usize) -> Result<BytesMut, DownloadError> {
         let buf = BytesMut::new();
         let mut bufs: Vec<(usize, BytesMut)> = Vec::new();
         let (bufs_sender, bufs_receiver) = unbounded::<(usize, BytesMut)>();
@@ -35,7 +35,6 @@ where
         let each_len = (self.0.get_length()? - 1) / num_threads;
 
         for i in 0..num_threads - 1 {
-            let url = url.clone();
             let scheme = self.0.clone();
             let bufs_sender = bufs_sender.clone();
             let pool_result_sender= pool_result_sender.clone();
@@ -43,7 +42,7 @@ where
 
             pool.spawn(move || {
                 let mut buf = BytesMut::with_capacity(end - start);
-                scheme.download(&mut buf, url, start, end).unwrap();
+                scheme.download(&mut buf, start, end).unwrap();
                 bufs_sender.send((i, buf)).unwrap();
                 pool_result_sender.send(()).unwrap();
             });
