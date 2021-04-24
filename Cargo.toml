@@ -1,0 +1,7 @@
+[package]
+name = "demon"
+version = "0.1.0"
+authors = ["Choi-Jungwoo <jungwoo@cineuse.com>"]
+edition = "2018"
+
+[dependencies]
