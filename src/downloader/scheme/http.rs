@@ -3,6 +3,7 @@ use super::Scheme;
 use bytes::{BufMut, BytesMut};
 use reqwest::{self, header};
 use std::fmt::{self, Display};
+use std::path::PathBuf;
 
 #[derive(Debug, Clone)]
 pub struct Http {
@@ -57,7 +58,9 @@ impl Scheme for Http {
         Ok(length)
     }
 
-    fn download(&self, buf: &mut BytesMut, start: usize, end: usize) -> Result<(), DownloadError> {
+    fn download(&self, start: usize, end: usize) -> Result<BytesMut, DownloadError> {
+        let mut buf = BytesMut::with_capacity(end - start);
+
         let client = reqwest::blocking::Client::new();
         let res = match client
             .get(&self.url)
@@ -70,9 +73,17 @@ impl Scheme for Http {
 
         buf.put(match res.bytes() {
             Ok(value) => value,
-            _ => return Err(DownloadError::DownlaodingError),
+            Err(err) => {
+                println!("err: {}", err);
+                return Err(DownloadError::DownlaodingError);
+            }
         });
 
-        Ok(())
+        Ok(buf)
+    }
+
+    fn get_file_name(&self) -> String {
+        let path = PathBuf::from(&self.url);
+        format!("{}", path.file_name().unwrap().to_str().unwrap())
     }
 }

@@ -7,5 +7,7 @@ use std::fmt::{Debug, Display};
 pub trait Scheme: Debug + Display + Clone + Send + Sync {
     fn get_length(&self) -> Result<usize, DownloadError>;
 
-    fn download(&self, buf: &mut BytesMut, start: usize, end: usize) -> Result<(), DownloadError>;
+    fn download(&self, start: usize, end: usize) -> Result<BytesMut, DownloadError>;
+
+    fn get_file_name(&self) -> String;
 }
