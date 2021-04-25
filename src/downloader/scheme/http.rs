@@ -4,23 +4,18 @@ use bytes::{BufMut, BytesMut};
 use reqwest::{self, header};
 use std::fmt::{self, Display};
 use std::path::PathBuf;
+use reqwest::blocking::Client;
+use std::fmt::Debug;
 
 #[derive(Debug, Clone)]
-pub struct Http {
+pub struct Http{
     url: String,
+    client: Client
 }
 
 impl Http {
-    pub fn new(url: String) -> Http {
-        Http { url }
-    }
-}
-
-impl From<&str> for Http {
-    fn from(value: &str) -> Self {
-        Http {
-            url: value.to_string(),
-        }
+    pub fn new(url: String, client: Client) -> Http {
+        Http { url, client }
     }
 }
 
@@ -30,10 +25,15 @@ impl Display for Http {
     }
 }
 
+impl<C: Into<Client>, S: Into<String>> From<(S, C)> for Http {
+    fn from(v: (S, C)) -> Self {
+        Self::new(v.0.into(), v.1.into())
+    }
+}
+
 impl Scheme for Http {
     fn get_length(&self) -> Result<usize, DownloadError> {
-        let client = reqwest::blocking::Client::new();
-        let res = match client
+        let res = match self.client
             .get(&self.url)
             .header(header::RANGE, "bytes=0-0")
             .send()
@@ -61,8 +61,7 @@ impl Scheme for Http {
     fn download(&self, start: usize, end: usize) -> Result<BytesMut, DownloadError> {
         let mut buf = BytesMut::with_capacity(end - start);
 
-        let client = reqwest::blocking::Client::new();
-        let res = match client
+        let res = match self.client
             .get(&self.url)
             .header(header::RANGE, &format!("bytes={}-{}", start, end))
             .send()
