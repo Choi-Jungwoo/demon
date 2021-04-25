@@ -36,6 +36,7 @@ where
             .build()
             .unwrap();
 
+        // TODO: SOME BUG HERE
         let each_len = (self.0.get_length()? - 1) / num_threads;
 
         for i in 0..num_threads {
@@ -79,9 +80,9 @@ where
         Ok(buf)
     }
 
-    pub fn save(&self, path: PathBuf, num_threads: usize) -> Result<(), DownloadError> {
+    pub fn save<P: Into<PathBuf>>(&self, path: P, num_threads: usize) -> Result<(), DownloadError> {
         let buf = self.read(num_threads)?;
-        let mut file = File::create(path).unwrap();
+        let mut file = File::create(path.into()).unwrap();
         file.write_all(&buf).unwrap();
 
         Ok(())
